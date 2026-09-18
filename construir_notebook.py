@@ -540,7 +540,13 @@ simplemente, la clase con mayor probabilidad (`argmax`).
 
 Veamoslo concretamente en imagenes reales del set de test, no como numero
 abstracto: para cada imagen mostramos la foto y, al lado, un grafico de
-barras con las {n_clases} probabilidades que le asigno el modelo.""".format(n_clases=len(razas)))
+barras con las {n_clases} probabilidades que le asigno el modelo. Mezclamos
+4 imagenes al azar (para ver el caso tipico) con 2 imagenes donde el modelo
+se equivoca (elegidas por ser las que predijo con mas confianza y aun asi
+se equivoco) — asi se ve, en el mismo formato, como se ve la salida cuando
+el modelo acierta y cuando falla: en un acierto tipico, una barra domina
+claramente por encima de las demas; en un error confiado, la barra que
+domina es la de la clase equivocada, no la correcta.""".format(n_clases=len(razas)))
 
 code("""def mostrar_prediccion(idx_en_test, ax_img, ax_barras):
     imagen_tensor, etiqueta_real = ds_test[idx_en_test]
@@ -561,10 +567,32 @@ code("""def mostrar_prediccion(idx_en_test, ax_img, ax_barras):
     ax_barras.set_xlabel("Probabilidad (softmax)")
 
 
-fig, ejes = plt.subplots(4, 2, figsize=(10, 14))
+# Buscamos los errores del modelo pasando todo el set de test (es rapido,
+# solo forward pass, sin backward). De todos los que el modelo clasifico
+# mal, nos quedamos con los 2 en los que estuvo MAS seguro de su
+# prediccion (equivocada) -- son los mas claros para mostrar en el grafico
+# de barras: una sola barra bien alta, pero en la clase que no es.
+errores_con_confianza = []
+idx_global = 0
+with torch.no_grad():
+    for imagenes, etiquetas in dl_test:
+        imagenes = imagenes.to(DEVICE)
+        probabilidades = torch.softmax(modelo(imagenes), dim=1)
+        confianza, prediccion = probabilidades.max(dim=1)
+        for i in range(len(etiquetas)):
+            if prediccion[i].item() != etiquetas[i].item():
+                errores_con_confianza.append((idx_global, confianza[i].item()))
+            idx_global += 1
+
+errores_con_confianza.sort(key=lambda par: -par[1])  # mas confiados primero
+indices_error = [idx for idx, _confianza in errores_con_confianza[:2]]
+
 random.seed(7)
-muestras = random.sample(range(len(ds_test)), 4)
-for fila, idx_muestra in enumerate(muestras):
+muestras_al_azar = random.sample(range(len(ds_test)), 4)
+filas = muestras_al_azar + indices_error
+
+fig, ejes = plt.subplots(len(filas), 2, figsize=(10, 3.5 * len(filas)))
+for fila, idx_muestra in enumerate(filas):
     mostrar_prediccion(idx_muestra, ejes[fila, 0], ejes[fila, 1])
 plt.tight_layout()
 plt.show()""")
