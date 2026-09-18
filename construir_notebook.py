@@ -45,7 +45,12 @@ def md(texto):
 
 
 def code(texto):
-    celdas.append(nbf.v4.new_code_cell(texto))
+    celda = nbf.v4.new_code_cell(texto)
+    # scrolled=False evita que Jupyter meta los outputs altos (graficos con
+    # varias filas de imagenes) en una cajita con scroll interno -- siempre
+    # se ven expandidos, aunque la pagina quede larga.
+    celda.metadata["scrolled"] = False
+    celdas.append(celda)
 
 
 # ============================================================
