@@ -138,6 +138,21 @@ torch.manual_seed(SEED)
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Usando device:", DEVICE)""")
 
+code("""# Jupyter a veces mete los graficos altos (varias filas de imagenes) en una
+# cajita con scroll interno, para no alargar la pagina. Esto lo desactiva:
+# preferimos ver todo expandido, aunque la pagina quede larga.
+from IPython.display import HTML, display
+
+display(HTML(\"\"\"
+<style>
+.jp-OutputArea-child, .jp-OutputArea-output, .jp-OutputArea,
+.output_scroll, .output_wrapper, .output, .jp-Cell-outputWrapper {
+    max-height: none !important;
+    overflow-y: visible !important;
+}
+</style>
+\"\"\"))""")
+
 md("""### A.1 — El dataset: Oxford-IIIT Pet, recortado a 6 razas
 
 El dataset completo de Oxford-IIIT Pet tiene 37 razas (12 de gato, 25 de
